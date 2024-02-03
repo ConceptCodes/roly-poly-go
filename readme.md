@@ -7,6 +7,8 @@ A Rest Api to manage polls 🤷🏾‍♂️
 ## Features
 - Authorization by Api Key
 
+## Documentation
+
 ## Prerequisites
 
 [![Go](https://img.shields.io/badge/go-%2300ADD8.svg?style=for-the-badge&logo=go&logoColor=white)](https://golang.org/doc/install) (version 1.21 or higher)
