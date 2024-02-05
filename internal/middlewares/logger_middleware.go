@@ -30,11 +30,13 @@ func RequestLogger(next http.Handler) http.Handler {
 
 		requestId := helpers.GetRequestId(r)
 		apiKey := helpers.GetApiKey(r)
+		userId := helpers.GetUserId(r)
 
 		log.UpdateContext(func(c zerolog.Context) zerolog.Context {
 			return c.
 				Str(constants.RequestIdCtxKey, requestId).
-				Str(constants.ApiKeyCtxKey, apiKey)
+				Str(constants.ApiKeyCtxKey, apiKey).
+				Str(constants.UserIdCtxKey, userId.String())
 		})
 
 		rw := &responseWriter{ResponseWriter: w, body: &bytes.Buffer{}}

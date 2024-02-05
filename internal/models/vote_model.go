@@ -11,7 +11,7 @@ import (
 
 type VoteModel struct {
 	gorm.Model
-	ID       uuid.UUID   `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
+	ID       uuid.UUID   `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"id"`
 	UserID   uuid.UUID   `gorm:"column:user_id;index;" json:"user_id"`
 	User     UserModel   `gorm:"foreignKey:UserID" json:"user"`
 	OptionID uuid.UUID   `gorm:"column:option_id;index;" json:"option_id"`

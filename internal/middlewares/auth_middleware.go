@@ -43,7 +43,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		apiKey := r.Header.Get(constants.AuthorizationHeader)
 
-		if apiKey != "" {
+		if apiKey == "" {
 			log.Error().Msg("Api key not found")
 			helpers.SendErrorResponse(w, "Authorization token not found", constants.Unauthorized, nil)
 			return

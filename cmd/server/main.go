@@ -31,31 +31,28 @@ func Run() {
 		log.Fatal().Err(err).Msg("Error while connecting to database")
 	}
 
-	if err := db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";").Error; err != nil {
-		log.Fatal().Err(err).Msg("Error while creating extension")
-	}
-
 	db.AutoMigrate(
 		&models.UserModel{},
-		&models.OptionModel{},
 		&models.PollModel{},
+		&models.OptionModel{},
 		&models.VoteModel{},
 	)
 
 	userRepo := repository.NewGormUserRepository(db)
 	pollRepo := repository.NewGormPollRepository(db)
+	optionRepo := repository.NewGormOptionRepository(db)
 
 	healthHandler := handlers.NewHealthHandler()
 	adminHandler := handlers.NewAdminHandler(userRepo)
-	pollHandler := handlers.NewPollHandler(pollRepo)
+	pollHandler := handlers.NewPollHandler(pollRepo, optionRepo)
 
 	router := mux.NewRouter()
 
 	// Middlewares
-	router.Use(middlewares.ContentTypeJSON)
 	router.Use(middlewares.TraceRequest)
-	router.Use(middlewares.RequestLogger)
+	router.Use(middlewares.ContentTypeJSON)
 	router.Use(middlewares.AuthMiddleware)
+	router.Use(middlewares.RequestLogger)
 
 	// Routes
 	router.HandleFunc(constants.HealthCheckEndpoint, healthHandler.ServiceAliveHandler).Methods("GET")
@@ -67,6 +64,7 @@ func Run() {
 	router.HandleFunc(constants.ClosePollEndpoint, pollHandler.ClosePoll).Methods("GET")
 	router.HandleFunc(constants.GetPollsEndpoint, pollHandler.GetPolls).Methods("GET")
 	router.HandleFunc(constants.UpdatePollEndpoint, pollHandler.UpdatePoll).Methods("PATCH")
+	router.HandleFunc(constants.PollByIdEndpoint, pollHandler.GetPollById).Methods("GET")
 
 	port := fmt.Sprint(config.AppConfig.Port)
 	srv := &http.Server{
@@ -76,7 +74,7 @@ func Run() {
 		ReadTimeout:  time.Duration(config.AppConfig.Timeout) * time.Second,
 	}
 
-	log.Debug().Msgf(constants.StartMessage, port, config.AppConfig.Env, time.Now().Format(time.RFC3339))
+	log.Debug().Msgf(constants.StartMessage, port, config.AppConfig.Env)
 
 	err = srv.ListenAndServe()
 

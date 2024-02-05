@@ -23,7 +23,7 @@ type GormPollRepository struct {
 
 func (r *GormPollRepository) FindAll() ([]*models.PollModel, error) {
 	var data []*models.PollModel
-	if err := r.db.Preload("User").Find(&data).Error; err != nil {
+	if err := r.db.Preload("roly_poly_user").Find(&data).Error; err != nil {
 		return nil, err
 	}
 	return data, nil
@@ -31,7 +31,7 @@ func (r *GormPollRepository) FindAll() ([]*models.PollModel, error) {
 
 func (r *GormPollRepository) FindByID(id uuid.UUID) (*models.PollModel, error) {
 	var data models.PollModel
-	if err := r.db.Preload("User").First(&data, id).Error; err != nil {
+	if err := r.db.Preload("roly_poly_user").First(&data, id).Error; err != nil {
 		return nil, err
 	}
 	return &data, nil

@@ -11,7 +11,7 @@ import (
 
 type OptionModel struct {
 	gorm.Model
-	ID     uuid.UUID `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
+	ID     uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"id"`
 	Label  string    `gorm:"not null;unique_index" json:"label"`
 	PollID uuid.UUID `gorm:"column:poll_id;index;" json:"poll_id"`
 	Poll   PollModel `gorm:"foreignKey:PollID" json:"poll"`
@@ -24,6 +24,7 @@ func (OptionModel) TableName() string {
 
 func (option *OptionModel) Simple() *OptionModel {
 	return &OptionModel{
+		ID:    option.ID,
 		Label: option.Label,
 		Votes: option.Votes,
 	}

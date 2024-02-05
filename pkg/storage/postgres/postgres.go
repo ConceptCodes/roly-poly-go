@@ -3,7 +3,6 @@ package postgres
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/rs/zerolog"
 	"gorm.io/driver/postgres"
@@ -42,7 +41,6 @@ func New() (*gorm.DB, error) {
 			Logger: logger.New(
 				log,
 				logger.Config{
-					SlowThreshold:        time.Second,
 					LogLevel:             logger.Info,
 					Colorful:             config.AppConfig.Env == constants.LocalEnv,
 					ParameterizedQueries: true,

@@ -16,15 +16,16 @@ import (
 )
 
 type PollHandler struct {
-	pollRepo repository.PollRepository
+	pollRepo   repository.PollRepository
+	optionRepo repository.OptionRepository
 }
 
-func NewPollHandler(pollRepo repository.PollRepository) *PollHandler {
-	return &PollHandler{pollRepo: pollRepo}
+func NewPollHandler(pollRepo repository.PollRepository, optionRepo repository.OptionRepository) *PollHandler {
+	return &PollHandler{pollRepo: pollRepo, optionRepo: optionRepo}
 }
 
 func (h *PollHandler) CreatePoll(w http.ResponseWriter, r *http.Request) {
-	var data models.PollRequestDto
+	var data models.CreatePollRequestDto
 
 	err := json.NewDecoder(r.Body).Decode(&data)
 
@@ -50,7 +51,24 @@ func (h *PollHandler) CreatePoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	helpers.SendSuccessResponse(w, "Poll created successfully", poll)
+	var options []*models.OptionModel
+
+	for _, option := range data.Options {
+		optionModel := &models.OptionModel{
+			PollID: poll.ID,
+			Label:  option,
+		}
+		options = append(options, optionModel)
+	}
+
+	err = h.optionRepo.CreateMany(options)
+
+	if err != nil {
+		helpers.SendErrorResponse(w, "Error while creating poll options", constants.InternalServerError, err)
+		return
+	}
+
+	helpers.SendSuccessResponse(w, "Poll created successfully", poll.Simple())
 }
 
 func (h *PollHandler) GetPolls(w http.ResponseWriter, r *http.Request) {
@@ -136,4 +154,23 @@ func (h *PollHandler) UpdatePoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	helpers.SendSuccessResponse(w, "Poll updated successfully", poll)
+}
+
+func (h *PollHandler) GetPollById(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := uuid.Parse(vars["id"])
+
+	if err != nil {
+		helpers.SendErrorResponse(w, "Invalid poll id", constants.BadRequest, err)
+		return
+	}
+
+	poll, err := h.pollRepo.FindByID(id)
+
+	if err != nil {
+		helpers.SendErrorResponse(w, "Error while fetching poll", constants.InternalServerError, err)
+		return
+	}
+
+	helpers.SendSuccessResponse(w, "Poll fetched successfully", poll.Simple())
 }
