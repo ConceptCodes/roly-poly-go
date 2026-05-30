@@ -44,6 +44,7 @@ func Run() {
 	healthHandler := handlers.NewHealthHandler(db)
 	adminHandler := handlers.NewAdminHandler(userRepo)
 	pollHandler := handlers.NewPollHandler(pollRepo, optionRepo)
+	voteHandler := handlers.NewVoteHandler(pollRepo)
 
 	router := mux.NewRouter()
 
@@ -62,7 +63,10 @@ func Run() {
 	router.HandleFunc(constants.ClosePollEndpoint, pollHandler.ClosePoll).Methods("PATCH")
 	router.HandleFunc(constants.GetPollsEndpoint, pollHandler.GetPolls).Methods("GET")
 	router.HandleFunc(constants.UpdatePollEndpoint, pollHandler.UpdatePoll).Methods("PATCH")
+	router.HandleFunc(constants.DeletePollEndpoint, pollHandler.DeletePoll).Methods("DELETE")
 	router.HandleFunc(constants.PollByIdEndpoint, pollHandler.GetPollById).Methods("GET")
+	router.HandleFunc(constants.CastVoteEndpoint, voteHandler.CastVote).Methods("POST")
+	router.HandleFunc(constants.ReportEndpoint, pollHandler.GetPollReport).Methods("GET")
 
 	port := fmt.Sprint(config.AppConfig.Port)
 	srv := &http.Server{

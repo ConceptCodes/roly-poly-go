@@ -156,6 +156,78 @@ func (h *PollHandler) UpdatePoll(w http.ResponseWriter, r *http.Request) {
 	helpers.SendSuccessResponse(w, "Poll updated successfully", poll)
 }
 
+func (h *PollHandler) DeletePoll(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := uuid.Parse(vars["id"])
+
+	if err != nil {
+		helpers.SendErrorResponse(w, "Invalid poll id", constants.BadRequest, err)
+		return
+	}
+
+	userOwnsPoll, err := h.pollRepo.OwnsPoll(helpers.GetUserId(r), id)
+
+	if err != nil || !userOwnsPoll {
+		helpers.SendErrorResponse(w, fmt.Sprintf("User does not own the poll with id %s", id.String()), constants.InternalServerError, err)
+		return
+	}
+
+	err = h.pollRepo.DeleteWithOptions(id)
+
+	if err != nil {
+		helpers.SendErrorResponse(w, "Error while deleting poll", constants.InternalServerError, err)
+		return
+	}
+
+	helpers.SendSuccessResponse(w, "Poll deleted successfully", nil)
+}
+
+func (h *PollHandler) GetPollReport(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := uuid.Parse(vars["id"])
+
+	if err != nil {
+		helpers.SendErrorResponse(w, "Invalid poll id", constants.BadRequest, err)
+		return
+	}
+
+	poll, err := h.pollRepo.FindByID(id)
+
+	if err != nil {
+		helpers.SendErrorResponse(w, "Poll not found", constants.NotFound, err)
+		return
+	}
+
+	var totalVotes uint
+	optionSummaries := make([]models.OptionSummaryDto, len(poll.Options))
+
+	for i, opt := range poll.Options {
+		totalVotes += opt.Votes
+		optionSummaries[i] = models.OptionSummaryDto{
+			OptionID: opt.ID,
+			Label:    opt.Label,
+			Votes:    opt.Votes,
+		}
+	}
+
+	for i := range optionSummaries {
+		if totalVotes > 0 {
+			optionSummaries[i].Percentage = float64(optionSummaries[i].Votes) / float64(totalVotes) * 100
+		} else {
+			optionSummaries[i].Percentage = 0
+		}
+	}
+
+	report := models.PollReportDto{
+		PollID:     poll.ID,
+		Title:      poll.Title,
+		TotalVotes: totalVotes,
+		Options:    optionSummaries,
+	}
+
+	helpers.SendSuccessResponse(w, "Poll report fetched successfully", report)
+}
+
 func (h *PollHandler) GetPollById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := uuid.Parse(vars["id"])

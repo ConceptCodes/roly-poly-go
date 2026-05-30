@@ -15,6 +15,8 @@ type PollRepository interface {
 	CreateWithOptions(poll *models.PollModel, options []*models.OptionModel) error
 	Update(poll *models.PollModel) error
 	Delete(poll *models.PollModel) error
+	DeleteWithOptions(pollID uuid.UUID) error
+	CastVotes(pollID, userID uuid.UUID, optionIDs []uuid.UUID) error
 	OwnsPoll(userId, pollId uuid.UUID) (bool, error)
 }
 

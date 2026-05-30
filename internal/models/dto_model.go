@@ -26,6 +26,24 @@ type CreatePollRequestDto struct {
 	Options     []string `json:"options" validate:"required,dive,required,min=2,max=100,noSQLKeywords"`
 }
 
+type CastVoteRequestDto struct {
+	OptionIDs []uuid.UUID `json:"option_ids" validate:"required,min=1"`
+}
+
+type OptionSummaryDto struct {
+	OptionID   uuid.UUID `json:"option_id"`
+	Label      string    `json:"label"`
+	Votes      uint      `json:"votes"`
+	Percentage float64   `json:"percentage"`
+}
+
+type PollReportDto struct {
+	PollID     uuid.UUID          `json:"poll_id"`
+	Title      string             `json:"title"`
+	TotalVotes uint               `json:"total_votes"`
+	Options    []OptionSummaryDto `json:"options"`
+}
+
 type PollRequestDto struct {
 	Title       string `json:"title" validate:"required,min=2,max=100,noSQLKeywords"`
 	Description string `json:"description" validate:"max=100,noSQLKeywords"`
