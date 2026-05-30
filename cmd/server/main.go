@@ -15,7 +15,6 @@ import (
 	"roly-poly/internal/constants"
 	"roly-poly/internal/handlers"
 	"roly-poly/internal/middlewares"
-	"roly-poly/internal/models"
 	repository "roly-poly/internal/repositories"
 	"roly-poly/pkg/logger"
 	"roly-poly/pkg/storage/postgres"
@@ -29,13 +28,6 @@ func Run() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error while connecting to database")
 	}
-
-	db.AutoMigrate(
-		&models.PollModel{},
-		&models.UserModel{},
-		&models.OptionModel{},
-		&models.VoteModel{},
-	)
 
 	userRepo := repository.NewGormUserRepository(db)
 	pollRepo := repository.NewGormPollRepository(db)
