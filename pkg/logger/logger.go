@@ -2,6 +2,7 @@ package logger
 
 import (
 	"os"
+	"roly-poly/internal/constants"
 	"sync"
 	"time"
 
@@ -19,7 +20,7 @@ func New() *zerolog.Logger {
 			Out: os.Stdout,
 			FormatTimestamp: func(i interface{}) string {
 				parse, _ := time.Parse(time.RFC3339, i.(string))
-				return parse.Format("2006-01-02 15:04:05")
+				return parse.Format(constants.TimeFormat)
 			},
 		}
 		logger := zerolog.New(output).With().Timestamp().CallerWithSkipFrameCount(2).Logger()

@@ -30,7 +30,9 @@ func (h *AdminHandler) OnboardUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	helpers.ValidateStruct(w, &data)
+	if !helpers.ValidateStruct(w, &data) {
+		return
+	}
 
 	user := &models.UserModel{
 		FirstName: data.FirstName,
@@ -44,7 +46,7 @@ func (h *AdminHandler) OnboardUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	helpers.SendSuccessResponse(w, "User onboarded successfully", user.Simple())
+	helpers.SendSuccessResponse(w, "User onboarded successfully", user)
 	return
 
 }

@@ -34,7 +34,9 @@ func (h *PollHandler) CreatePoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	helpers.ValidateStruct(w, &data)
+	if !helpers.ValidateStruct(w, &data) {
+		return
+	}
 
 	userId := helpers.GetUserId(r)
 
@@ -68,7 +70,7 @@ func (h *PollHandler) CreatePoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	helpers.SendSuccessResponse(w, "Poll created successfully", poll.Simple())
+	helpers.SendSuccessResponse(w, "Poll created successfully", poll)
 }
 
 func (h *PollHandler) GetPolls(w http.ResponseWriter, r *http.Request) {
@@ -123,7 +125,9 @@ func (h *PollHandler) UpdatePoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	helpers.ValidateStruct(w, &data)
+	if !helpers.ValidateStruct(w, &data) {
+		return
+	}
 
 	vars := mux.Vars(r)
 	id, err := uuid.Parse(vars["id"])
@@ -172,5 +176,5 @@ func (h *PollHandler) GetPollById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	helpers.SendSuccessResponse(w, "Poll fetched successfully", poll.Simple())
+	helpers.SendSuccessResponse(w, "Poll fetched successfully", poll)
 }

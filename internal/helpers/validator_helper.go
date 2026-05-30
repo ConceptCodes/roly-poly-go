@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 
+	"roly-poly/internal/constants"
 	"roly-poly/pkg/logger"
 )
 
@@ -30,7 +31,7 @@ func noSQLKeywords(fl validator.FieldLevel) bool {
 	return true
 }
 
-func ValidateStruct(w http.ResponseWriter, s interface{}) error {
+func ValidateStruct(w http.ResponseWriter, s interface{}) bool {
 	log := logger.New()
 	log.Debug().Interface("data", s).Msg("Validating Request Data")
 
@@ -40,7 +41,9 @@ func ValidateStruct(w http.ResponseWriter, s interface{}) error {
 		for _, err := range err.(validator.ValidationErrors) {
 			errMsgs = append(errMsgs, fmt.Sprintf("Field validation for '%s' failed on the '%s' tag", err.Field(), err.Tag()))
 		}
-		return errors.New(strings.Join(errMsgs, ", "))
+		message := strings.Join(errMsgs, ", ")
+		SendErrorResponse(w, message, constants.BadRequest, errors.New(message))
+		return false
 	}
-	return nil
+	return true
 }

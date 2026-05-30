@@ -1,12 +1,8 @@
 package models
 
 import (
-	"fmt"
-
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-
-	"roly-poly/internal/constants"
 )
 
 type VoteModel struct {
@@ -18,12 +14,4 @@ type VoteModel struct {
 	Option   OptionModel `gorm:"foreignKey:OptionID" json:"option"`
 	PollID   uuid.UUID   `gorm:"column:poll_id;index;" json:"poll_id"`
 	Poll     PollModel   `gorm:"foreignKey:PollID" json:"poll"`
-}
-
-func (VoteModel) TableName() string {
-	return fmt.Sprintf(constants.DBTablePrefix, "votes")
-}
-
-func (vote *VoteModel) Simple() *VoteModel {
-	return &VoteModel{}
 }

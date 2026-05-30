@@ -1,12 +1,15 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/gorilla/mux"
-	"gorm.io/gorm"
 
 	"roly-poly/config"
 	"roly-poly/internal/constants"
@@ -18,22 +21,18 @@ import (
 	"roly-poly/pkg/storage/postgres"
 )
 
-var (
-	db  *gorm.DB
-	err error
-)
-
 func Run() {
-	db, err = postgres.New()
 	log := logger.New()
+
+	db, err := postgres.New()
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error while connecting to database")
 	}
 
 	db.AutoMigrate(
-		&models.UserModel{},
 		&models.PollModel{},
+		&models.UserModel{},
 		&models.OptionModel{},
 		&models.VoteModel{},
 	)
@@ -42,19 +41,17 @@ func Run() {
 	pollRepo := repository.NewGormPollRepository(db)
 	optionRepo := repository.NewGormOptionRepository(db)
 
-	healthHandler := handlers.NewHealthHandler()
+	healthHandler := handlers.NewHealthHandler(db)
 	adminHandler := handlers.NewAdminHandler(userRepo)
 	pollHandler := handlers.NewPollHandler(pollRepo, optionRepo)
 
 	router := mux.NewRouter()
 
-	// Middlewares
 	router.Use(middlewares.TraceRequest)
 	router.Use(middlewares.ContentTypeJSON)
-	router.Use(middlewares.AuthMiddleware)
+	router.Use(middlewares.NewAuthMiddleware(db))
 	router.Use(middlewares.RequestLogger)
 
-	// Routes
 	router.HandleFunc(constants.HealthCheckEndpoint, healthHandler.ServiceAliveHandler).Methods("GET")
 	router.HandleFunc(constants.ReadinessEndpoint, healthHandler.ServiceReadyHandler).Methods("GET")
 
@@ -69,20 +66,31 @@ func Run() {
 	port := fmt.Sprint(config.AppConfig.Port)
 	srv := &http.Server{
 		Handler:      router,
-		Addr:         fmt.Sprintf("127.0.0.1:%s", port),
+		Addr:         fmt.Sprintf(":%s", port),
 		WriteTimeout: time.Duration(config.AppConfig.Timeout) * time.Second,
 		ReadTimeout:  time.Duration(config.AppConfig.Timeout) * time.Second,
 	}
 
-	log.Debug().Msgf(constants.StartMessage, port, config.AppConfig.Env)
+	go func() {
+		log.Debug().Msgf(constants.StartMessage, port, config.AppConfig.Env)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal().Err(err).Msg("Error while starting server")
+		}
+	}()
 
-	err = srv.ListenAndServe()
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
 
-	if err != nil {
-		postgres.Close()
-		log.
-			Fatal().
-			Err(err).
-			Msg("Error while starting server")
+	log.Info().Msg("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Error().Err(err).Msg("Server forced to shutdown")
 	}
+
+	postgres.Close(db)
+	log.Info().Msg("Server exited")
 }

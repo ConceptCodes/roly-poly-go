@@ -1,24 +1,24 @@
 package models
 
 type HealthCheckResponseDto struct {
-	Up      bool   `json:"status"`
+	Status  bool   `json:"status"`
 	Service string `json:"service"`
 }
 
 type OnboardUserRequestDto struct {
-	FirstName string `json:"first_name" validate:"required,alpha,min=2,max=100"`
-	LastName  string `json:"last_name" validate:"required,alpha,min=2,max=100"`
+	FirstName string `json:"first_name" validate:"required,alpha,min=2,max=100,noSQLKeywords"`
+	LastName  string `json:"last_name" validate:"required,alpha,min=2,max=100,noSQLKeywords"`
 }
 
 type CreatePollRequestDto struct {
-	Title       string   `json:"title" validate:"required,min=2,max=100"`
-	Description string   `json:"description" validate:"max=100"`
+	Title       string   `json:"title" validate:"required,min=2,max=100,noSQLKeywords"`
+	Description string   `json:"description" validate:"max=100,noSQLKeywords"`
 	Public      bool     `json:"public"`
-	Options     []string `json:"options" validate:"required,dive,required,min=2,max=100"`
+	Options     []string `json:"options" validate:"required,dive,required,min=2,max=100,noSQLKeywords"`
 }
 
 type PollRequestDto struct {
-	Title       string `json:"title" validate:"required,min=2,max=100"`
-	Description string `json:"description" validate:"max=100"`
+	Title       string `json:"title" validate:"required,min=2,max=100,noSQLKeywords"`
+	Description string `json:"description" validate:"max=100,noSQLKeywords"`
 	Public      bool   `json:"public"`
 }

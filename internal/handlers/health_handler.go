@@ -4,20 +4,24 @@ import (
 	"net/http"
 	"sync"
 
+	"gorm.io/gorm"
+
 	"roly-poly/internal/helpers"
 	"roly-poly/internal/models"
 	"roly-poly/pkg/storage/postgres"
 )
 
-type HealthHandler struct{}
+type HealthHandler struct {
+	db *gorm.DB
+}
 
 type Service struct {
 	Name string
 	Fn   func() bool
 }
 
-func NewHealthHandler() *HealthHandler {
-	return &HealthHandler{}
+func NewHealthHandler(db *gorm.DB) *HealthHandler {
+	return &HealthHandler{db: db}
 }
 
 // ServiceAliveHandler godoc
@@ -44,7 +48,7 @@ func (h *HealthHandler) ServiceAliveHandler(w http.ResponseWriter, r *http.Reque
 func (h *HealthHandler) ServiceReadyHandler(w http.ResponseWriter, r *http.Request) {
 
 	services := []Service{
-		{Name: "Postgres", Fn: postgres.HealthCheck},
+		{Name: "Postgres", Fn: func() bool { return postgres.HealthCheck(h.db) }},
 	}
 
 	var wg sync.WaitGroup
@@ -68,6 +72,6 @@ func (h *HealthHandler) ServiceReadyHandler(w http.ResponseWriter, r *http.Reque
 func Runner(name string, fn func() bool) models.HealthCheckResponseDto {
 	return models.HealthCheckResponseDto{
 		Service: name,
-		Up:      fn(),
+		Status:  fn(),
 	}
 }
