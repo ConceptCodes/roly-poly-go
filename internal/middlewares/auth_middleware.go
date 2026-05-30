@@ -3,8 +3,6 @@ package middlewares
 import (
 	"net/http"
 
-	"gorm.io/gorm"
-
 	"roly-poly/internal/constants"
 	"roly-poly/internal/helpers"
 	repository "roly-poly/internal/repositories"
@@ -17,9 +15,7 @@ var whitelist = []string{
 	constants.OnboardUserEndpoint,
 }
 
-func NewAuthMiddleware(db *gorm.DB) func(http.Handler) http.Handler {
-	userRepo := repository.NewGormUserRepository(db)
-
+func NewAuthMiddleware(userRepo repository.UserRepository) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 

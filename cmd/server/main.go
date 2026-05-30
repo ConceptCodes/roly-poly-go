@@ -51,7 +51,7 @@ func Run() {
 	router.Use(middlewares.BodyLimit(middlewares.MaxBodyBytes))
 	router.Use(middlewares.TraceRequest)
 	router.Use(middlewares.ContentTypeJSON)
-	router.Use(middlewares.NewAuthMiddleware(db))
+	router.Use(middlewares.NewAuthMiddleware(userRepo))
 	router.Use(middlewares.RequestLogger)
 	router.NotFoundHandler = http.HandlerFunc(middlewares.NotFound)
 

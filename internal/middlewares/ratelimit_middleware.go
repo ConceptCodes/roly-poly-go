@@ -1,15 +1,19 @@
 package middlewares
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
 	"roly-poly/internal/constants"
 	"roly-poly/internal/helpers"
-	"roly-poly/pkg/ratelimit"
 )
 
-func NewRateLimitMiddleware(limiter *ratelimit.Limiter) func(http.Handler) http.Handler {
+type AllowChecker interface {
+	Allow(ctx context.Context, ip string) (bool, error)
+}
+
+func NewRateLimitMiddleware(limiter AllowChecker) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ip := extractIP(r)
