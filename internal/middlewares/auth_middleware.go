@@ -3,12 +3,12 @@ package middlewares
 import (
 	"net/http"
 
-	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 
 	"roly-poly/internal/constants"
 	"roly-poly/internal/helpers"
 	repository "roly-poly/internal/repositories"
+	"roly-poly/pkg/logger"
 )
 
 var whitelist = []string{
@@ -33,15 +33,15 @@ func NewAuthMiddleware(db *gorm.DB) func(http.Handler) http.Handler {
 			apiKey := r.Header.Get(constants.AuthorizationHeader)
 
 			if apiKey == "" {
-				log.Error().Msg("Api key not found")
+				logger.New().Error().Msg("Api key not found")
 				helpers.SendErrorResponse(w, "Authorization token not found", constants.Unauthorized, nil)
 				return
 			}
 
-			user, err := userRepo.FindByApiKey(apiKey)
+			user, err := userRepo.FindByApiKey(r.Context(), apiKey)
 
 			if err != nil {
-				log.Error().Err(err).Msg("Error while fetching user by api key")
+				logger.New().Error().Err(err).Msg("Error while fetching user by api key")
 				helpers.SendErrorResponse(w, "Error while fetching user by api key", constants.InternalServerError, nil)
 				return
 			}

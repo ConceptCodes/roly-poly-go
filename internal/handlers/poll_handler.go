@@ -54,7 +54,7 @@ func (h *PollHandler) CreatePoll(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	err = h.pollRepo.CreateWithOptions(poll, options)
+	err = h.pollRepo.CreateWithOptions(r.Context(), poll, options)
 
 	if err != nil {
 		helpers.SendErrorResponse(w, "Error while creating poll", constants.InternalServerError, err)
@@ -69,7 +69,7 @@ func (h *PollHandler) GetPolls(w http.ResponseWriter, r *http.Request) {
 
 	userId := helpers.GetUserId(r)
 
-	polls, err := h.pollRepo.FindAll(userId, publicOnly)
+	polls, err := h.pollRepo.FindAll(r.Context(), userId, publicOnly)
 
 	if err != nil {
 		helpers.SendErrorResponse(w, "Error while fetching polls", constants.InternalServerError, err)
@@ -88,10 +88,13 @@ func (h *PollHandler) ClosePoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userOwnsPoll, err := h.pollRepo.OwnsPoll(helpers.GetUserId(r), id)
-
-	if err != nil || !userOwnsPoll {
-		helpers.SendErrorResponse(w, fmt.Sprintf("User does not own the poll with id %s", id.String()), constants.InternalServerError, err)
+	owns, err := h.pollRepo.OwnsPoll(r.Context(), helpers.GetUserId(r), id)
+	if err != nil {
+		helpers.SendErrorResponse(w, "Error checking poll ownership", constants.InternalServerError, err)
+		return
+	}
+	if !owns {
+		helpers.SendErrorResponse(w, fmt.Sprintf("User does not own the poll with id %s", id.String()), constants.Forbidden, nil)
 		return
 	}
 
@@ -101,7 +104,7 @@ func (h *PollHandler) ClosePoll(w http.ResponseWriter, r *http.Request) {
 		Closed: &now,
 	}
 
-	err = h.pollRepo.Update(poll)
+	err = h.pollRepo.Update(r.Context(), poll)
 
 	if err != nil {
 		helpers.SendErrorResponse(w, "Error while closing poll", constants.InternalServerError, err)
@@ -133,10 +136,13 @@ func (h *PollHandler) UpdatePoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userOwnsPoll, err := h.pollRepo.OwnsPoll(helpers.GetUserId(r), id)
-
-	if err != nil || !userOwnsPoll {
-		helpers.SendErrorResponse(w, fmt.Sprintf("User does not own the poll with id %s", id.String()), constants.InternalServerError, err)
+	owns, err := h.pollRepo.OwnsPoll(r.Context(), helpers.GetUserId(r), id)
+	if err != nil {
+		helpers.SendErrorResponse(w, "Error checking poll ownership", constants.InternalServerError, err)
+		return
+	}
+	if !owns {
+		helpers.SendErrorResponse(w, fmt.Sprintf("User does not own the poll with id %s", id.String()), constants.Forbidden, nil)
 		return
 	}
 
@@ -146,7 +152,7 @@ func (h *PollHandler) UpdatePoll(w http.ResponseWriter, r *http.Request) {
 		Description: data.Description,
 	}
 
-	err = h.pollRepo.Update(poll)
+	err = h.pollRepo.Update(r.Context(), poll)
 
 	if err != nil {
 		helpers.SendErrorResponse(w, "Error while updating poll", constants.InternalServerError, err)
@@ -165,14 +171,17 @@ func (h *PollHandler) DeletePoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userOwnsPoll, err := h.pollRepo.OwnsPoll(helpers.GetUserId(r), id)
-
-	if err != nil || !userOwnsPoll {
-		helpers.SendErrorResponse(w, fmt.Sprintf("User does not own the poll with id %s", id.String()), constants.InternalServerError, err)
+	owns, err := h.pollRepo.OwnsPoll(r.Context(), helpers.GetUserId(r), id)
+	if err != nil {
+		helpers.SendErrorResponse(w, "Error checking poll ownership", constants.InternalServerError, err)
+		return
+	}
+	if !owns {
+		helpers.SendErrorResponse(w, fmt.Sprintf("User does not own the poll with id %s", id.String()), constants.Forbidden, nil)
 		return
 	}
 
-	err = h.pollRepo.DeleteWithOptions(id)
+	err = h.pollRepo.DeleteWithOptions(r.Context(), id)
 
 	if err != nil {
 		helpers.SendErrorResponse(w, "Error while deleting poll", constants.InternalServerError, err)
@@ -191,7 +200,7 @@ func (h *PollHandler) GetPollReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	poll, err := h.pollRepo.FindByID(id)
+	poll, err := h.pollRepo.FindByIDForUser(r.Context(), id, helpers.GetUserId(r))
 
 	if err != nil {
 		helpers.SendErrorResponse(w, "Poll not found", constants.NotFound, err)
@@ -237,10 +246,10 @@ func (h *PollHandler) GetPollById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	poll, err := h.pollRepo.FindByID(id)
+	poll, err := h.pollRepo.FindByIDForUser(r.Context(), id, helpers.GetUserId(r))
 
 	if err != nil {
-		helpers.SendErrorResponse(w, "Error while fetching poll", constants.InternalServerError, err)
+		helpers.SendErrorResponse(w, "Error while fetching poll", constants.NotFound, err)
 		return
 	}
 

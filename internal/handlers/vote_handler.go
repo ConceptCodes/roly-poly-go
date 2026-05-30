@@ -42,7 +42,7 @@ func (h *VoteHandler) CastVote(w http.ResponseWriter, r *http.Request) {
 
 	userID := helpers.GetUserId(r)
 
-	poll, err := h.pollRepo.FindByID(pollID)
+	poll, err := h.pollRepo.FindByID(r.Context(), pollID)
 	if err != nil {
 		helpers.SendErrorResponse(w, "Poll not found", constants.NotFound, err)
 		return
@@ -72,7 +72,19 @@ func (h *VoteHandler) CastVote(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := h.pollRepo.CastVotes(pollID, userID, data.OptionIDs); err != nil {
+	if !poll.AllowMultipleVotes {
+		count, err := h.pollRepo.CountVotesByUserAndPoll(r.Context(), userID, pollID)
+		if err != nil {
+			helpers.SendErrorResponse(w, "Error checking vote eligibility", constants.InternalServerError, err)
+			return
+		}
+		if count > 0 {
+			helpers.SendErrorResponse(w, "You have already voted on this poll", constants.BadRequest, nil)
+			return
+		}
+	}
+
+	if err := h.pollRepo.CastVotes(r.Context(), pollID, userID, data.OptionIDs); err != nil {
 		helpers.SendErrorResponse(w, "Error while casting vote", constants.InternalServerError, err)
 		return
 	}

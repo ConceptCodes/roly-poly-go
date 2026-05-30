@@ -23,18 +23,6 @@ const (
 	ReportEndpoint      = PollByIdEndpoint + "/report"
 	UpdatePollEndpoint  = PollByIdEndpoint
 
-	// Messages
-	EntityNotFound        = "%s with id %d does not exist."
-	GetEntityByIdMessage  = "Found %s with id %d."
-	SaveEntityError       = "Error while saving %s."
-	SuccessMessage        = "You have successfully %s!"
-	GetAllEntitiesError   = "Error while fetching all %s."
-	GetAllEntitiesMessage = "Found %d %s."
-	CreateEntityError     = "Error while creating %s."
-	CreateEntityMessage   = "Created %s successfully."
-	UpdateEntityError     = "Error while updating %s."
-	UpdateEntityMessage   = "Updated %s successfully."
-
 	// Queries
 	FindByIdQuery          = "id = ?"
 	FindByApiKeyQuery      = "api_key = ?"

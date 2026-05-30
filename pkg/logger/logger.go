@@ -1,30 +1,40 @@
 package logger
 
 import (
+	"io"
 	"os"
-	"roly-poly/internal/constants"
 	"sync"
-	"time"
 
 	"github.com/rs/zerolog"
+
+	"roly-poly/config"
+	"roly-poly/internal/constants"
 )
 
 var (
-	once sync.Once
-	log  *zerolog.Logger
+	instance *zerolog.Logger
+	once     sync.Once
 )
 
 func New() *zerolog.Logger {
 	once.Do(func() {
-		output := zerolog.ConsoleWriter{
-			Out: os.Stdout,
-			FormatTimestamp: func(i interface{}) string {
-				parse, _ := time.Parse(time.RFC3339, i.(string))
-				return parse.Format(constants.TimeFormat)
-			},
+		env := config.AppConfig.Env
+		var output io.Writer = os.Stdout
+
+		if env == constants.LocalEnv || env == constants.DevelopmentEnv {
+			output = zerolog.ConsoleWriter{
+				Out:        os.Stdout,
+				TimeFormat: constants.TimeFormat,
+			}
 		}
-		logger := zerolog.New(output).With().Timestamp().CallerWithSkipFrameCount(2).Logger()
-		log = &logger
+
+		log := zerolog.New(output).
+			With().
+			Timestamp().
+			CallerWithSkipFrameCount(2).
+			Logger()
+
+		instance = &log
 	})
-	return log
+	return instance
 }

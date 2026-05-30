@@ -39,7 +39,7 @@ func (h *AdminHandler) OnboardUser(w http.ResponseWriter, r *http.Request) {
 		LastName:  data.LastName,
 	}
 
-	err = h.userRepo.Create(user)
+	err = h.userRepo.Create(r.Context(), user)
 
 	if err != nil {
 		helpers.SendErrorResponse(w, "Error while creating user", constants.InternalServerError, err)
