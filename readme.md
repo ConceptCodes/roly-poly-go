@@ -251,5 +251,4 @@ go test ./...
 ## Roadmap
 
 - [x] Add an endpoint to generate reports
-- [ ] Integrate with OpenAI to offer a chatbot over results
-- [ ] Add more tests
+- [x] Add more tests
