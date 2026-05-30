@@ -43,38 +43,33 @@ func (h *PollHandler) CreatePoll(w http.ResponseWriter, r *http.Request) {
 	poll := &models.PollModel{
 		Title:       data.Title,
 		Description: data.Description,
+		Public:      data.Public,
 		UserID:      userId,
 	}
 
-	err = h.pollRepo.Create(poll)
+	var options []*models.OptionModel
+	for _, option := range data.Options {
+		options = append(options, &models.OptionModel{
+			Label: option,
+		})
+	}
+
+	err = h.pollRepo.CreateWithOptions(poll, options)
 
 	if err != nil {
 		helpers.SendErrorResponse(w, "Error while creating poll", constants.InternalServerError, err)
 		return
 	}
 
-	var options []*models.OptionModel
-
-	for _, option := range data.Options {
-		optionModel := &models.OptionModel{
-			PollID: poll.ID,
-			Label:  option,
-		}
-		options = append(options, optionModel)
-	}
-
-	err = h.optionRepo.CreateMany(options)
-
-	if err != nil {
-		helpers.SendErrorResponse(w, "Error while creating poll options", constants.InternalServerError, err)
-		return
-	}
-
-	helpers.SendSuccessResponse(w, "Poll created successfully", poll)
+	helpers.SendCreatedResponse(w, "Poll created successfully", poll)
 }
 
 func (h *PollHandler) GetPolls(w http.ResponseWriter, r *http.Request) {
-	polls, err := h.pollRepo.FindAll()
+	publicOnly := r.URL.Query().Get("public") == "true"
+
+	userId := helpers.GetUserId(r)
+
+	polls, err := h.pollRepo.FindAll(userId, publicOnly)
 
 	if err != nil {
 		helpers.SendErrorResponse(w, "Error while fetching polls", constants.InternalServerError, err)
@@ -100,9 +95,10 @@ func (h *PollHandler) ClosePoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	now := time.Now()
 	poll := &models.PollModel{
 		ID:     id,
-		Closed: time.Now(),
+		Closed: &now,
 	}
 
 	err = h.pollRepo.Update(poll)

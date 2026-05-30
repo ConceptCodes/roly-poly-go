@@ -16,7 +16,7 @@ const (
 	GetPollsEndpoint    = ApiPrefix + "/polls"
 	CreatePollEndpoint  = GetPollsEndpoint
 	PollByIdEndpoint    = GetPollsEndpoint + "/{id}"
-	ClosePollEndpoint   = PollByIdEndpoint
+	ClosePollEndpoint   = GetPollsEndpoint + "/{id}/close"
 	UpdatePollEndpoint  = PollByIdEndpoint
 
 	// Messages

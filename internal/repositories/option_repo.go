@@ -21,7 +21,7 @@ type GormOptionRepository struct {
 
 func (r *GormOptionRepository) FindAll() ([]*models.OptionModel, error) {
 	var data []*models.OptionModel
-	if err := r.db.Preload("roly_poly_poll").Find(&data).Error; err != nil {
+	if err := r.db.Preload("Poll").Find(&data).Error; err != nil {
 		return nil, err
 	}
 	return data, nil
@@ -29,7 +29,7 @@ func (r *GormOptionRepository) FindAll() ([]*models.OptionModel, error) {
 
 func (r *GormOptionRepository) FindByID(id uuid.UUID) (*models.OptionModel, error) {
 	var data models.OptionModel
-	if err := r.db.Preload("roly_poly_poll").First(&data, id).Error; err != nil {
+	if err := r.db.Preload("Poll").First(&data, id).Error; err != nil {
 		return nil, err
 	}
 	return &data, nil
@@ -43,7 +43,7 @@ func (r *GormOptionRepository) CreateMany(options []*models.OptionModel) error {
 }
 
 func (r *GormOptionRepository) Update(option *models.OptionModel) error {
-	if err := r.db.Save(&option).Error; err != nil {
+	if err := r.db.Model(&models.OptionModel{}).Where("id = ?", option.ID).Updates(option).Error; err != nil {
 		return err
 	}
 	return nil

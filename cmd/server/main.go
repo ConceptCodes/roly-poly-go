@@ -59,7 +59,7 @@ func Run() {
 	router.HandleFunc(constants.OnboardUserEndpoint, adminHandler.OnboardUser).Methods("POST")
 
 	router.HandleFunc(constants.CreatePollEndpoint, pollHandler.CreatePoll).Methods("POST")
-	router.HandleFunc(constants.ClosePollEndpoint, pollHandler.ClosePoll).Methods("GET")
+	router.HandleFunc(constants.ClosePollEndpoint, pollHandler.ClosePoll).Methods("PATCH")
 	router.HandleFunc(constants.GetPollsEndpoint, pollHandler.GetPolls).Methods("GET")
 	router.HandleFunc(constants.UpdatePollEndpoint, pollHandler.UpdatePoll).Methods("PATCH")
 	router.HandleFunc(constants.PollByIdEndpoint, pollHandler.GetPollById).Methods("GET")
