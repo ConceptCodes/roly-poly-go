@@ -289,6 +289,260 @@ func TestGetPollById(t *testing.T) {
 	}
 }
 
+func TestGetPolls(t *testing.T) {
+	userID := uuid.New()
+
+	tests := []struct {
+		name       string
+		public     string
+		mockSetup  func(repo *mockPollRepo)
+		wantStatus int
+		wantErr    string
+	}{
+		{
+			name:   "successful fetch own polls",
+			public: "false",
+			mockSetup: func(repo *mockPollRepo) {
+				repo.findAllFunc = func(ctx context.Context, uid uuid.UUID, publicOnly bool) ([]*models.PollModel, error) {
+					return []*models.PollModel{{ID: uuid.New(), Title: "Poll 1"}}, nil
+				}
+			},
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:   "successful fetch public polls",
+			public: "true",
+			mockSetup: func(repo *mockPollRepo) {
+				repo.findAllFunc = func(ctx context.Context, uid uuid.UUID, publicOnly bool) ([]*models.PollModel, error) {
+					return []*models.PollModel{{ID: uuid.New(), Title: "Public Poll", Public: true}}, nil
+				}
+			},
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:   "repo error",
+			public: "false",
+			mockSetup: func(repo *mockPollRepo) {
+				repo.findAllFunc = func(ctx context.Context, uid uuid.UUID, publicOnly bool) ([]*models.PollModel, error) {
+					return nil, fmt.Errorf("db error")
+				}
+			},
+			wantStatus: http.StatusInternalServerError,
+			wantErr:    "RP-500",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := &mockPollRepo{}
+			tt.mockSetup(repo)
+			handler := NewPollHandler(repo, &mockOptionRepo{})
+
+			req := setupPollRequest(http.MethodGet, "/api/polls?public="+tt.public, nil, userID)
+			rec := httptest.NewRecorder()
+
+			handler.GetPolls(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("status = %d, want %d", rec.Code, tt.wantStatus)
+			}
+		})
+	}
+}
+
+func TestUpdatePoll(t *testing.T) {
+	userID := uuid.New()
+	pollID := uuid.New()
+
+	tests := []struct {
+		name       string
+		pollID     string
+		body       interface{}
+		mockSetup  func(repo *mockPollRepo)
+		wantStatus int
+		wantErr    string
+	}{
+		{
+			name:   "successful update",
+			pollID: pollID.String(),
+			body: map[string]string{
+				"title": "Updated Title",
+			},
+			mockSetup: func(repo *mockPollRepo) {
+				repo.ownsPollFunc = func(ctx context.Context, uid, pid uuid.UUID) (bool, error) {
+					return true, nil
+				}
+				repo.updateFunc = func(ctx context.Context, poll *models.PollModel) error {
+					return nil
+				}
+			},
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:   "invalid poll id",
+			pollID: "not-a-uuid",
+			body: map[string]string{
+				"title": "Test",
+			},
+			mockSetup:  func(repo *mockPollRepo) {},
+			wantStatus: http.StatusBadRequest,
+			wantErr:    "RP-400",
+		},
+		{
+			name:   "not owner",
+			pollID: pollID.String(),
+			body: map[string]string{
+				"title": "Test",
+			},
+			mockSetup: func(repo *mockPollRepo) {
+				repo.ownsPollFunc = func(ctx context.Context, uid, pid uuid.UUID) (bool, error) {
+					return false, nil
+				}
+			},
+			wantStatus: http.StatusForbidden,
+			wantErr:    "RP-403",
+		},
+		{
+			name:   "owns poll returns error",
+			pollID: pollID.String(),
+			body: map[string]string{
+				"title": "Test",
+			},
+			mockSetup: func(repo *mockPollRepo) {
+				repo.ownsPollFunc = func(ctx context.Context, uid, pid uuid.UUID) (bool, error) {
+					return false, fmt.Errorf("db error")
+				}
+			},
+			wantStatus: http.StatusInternalServerError,
+			wantErr:    "RP-500",
+		},
+		{
+			name:   "update error",
+			pollID: pollID.String(),
+			body: map[string]string{
+				"title": "Test",
+			},
+			mockSetup: func(repo *mockPollRepo) {
+				repo.ownsPollFunc = func(ctx context.Context, uid, pid uuid.UUID) (bool, error) {
+					return true, nil
+				}
+				repo.updateFunc = func(ctx context.Context, poll *models.PollModel) error {
+					return fmt.Errorf("db error")
+				}
+			},
+			wantStatus: http.StatusInternalServerError,
+			wantErr:    "RP-500",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := &mockPollRepo{}
+			tt.mockSetup(repo)
+			handler := NewPollHandler(repo, &mockOptionRepo{})
+
+			req := setupPollRequest(http.MethodPatch, "/api/polls/"+tt.pollID, tt.body, userID)
+			req = mux.SetURLVars(req, map[string]string{"id": tt.pollID})
+			rec := httptest.NewRecorder()
+
+			handler.UpdatePoll(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("status = %d, want %d", rec.Code, tt.wantStatus)
+			}
+		})
+	}
+}
+
+func TestDeletePoll(t *testing.T) {
+	userID := uuid.New()
+	pollID := uuid.New()
+
+	tests := []struct {
+		name       string
+		pollID     string
+		mockSetup  func(repo *mockPollRepo)
+		wantStatus int
+		wantErr    string
+	}{
+		{
+			name:   "successful delete",
+			pollID: pollID.String(),
+			mockSetup: func(repo *mockPollRepo) {
+				repo.ownsPollFunc = func(ctx context.Context, uid, pid uuid.UUID) (bool, error) {
+					return true, nil
+				}
+				repo.deleteWithOptionsFunc = func(ctx context.Context, pid uuid.UUID) error {
+					return nil
+				}
+			},
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:   "invalid poll id",
+			pollID: "not-a-uuid",
+			mockSetup: func(repo *mockPollRepo) {
+			},
+			wantStatus: http.StatusBadRequest,
+			wantErr:    "RP-400",
+		},
+		{
+			name:   "not owner",
+			pollID: pollID.String(),
+			mockSetup: func(repo *mockPollRepo) {
+				repo.ownsPollFunc = func(ctx context.Context, uid, pid uuid.UUID) (bool, error) {
+					return false, nil
+				}
+			},
+			wantStatus: http.StatusForbidden,
+			wantErr:    "RP-403",
+		},
+		{
+			name:   "owns poll returns error",
+			pollID: pollID.String(),
+			mockSetup: func(repo *mockPollRepo) {
+				repo.ownsPollFunc = func(ctx context.Context, uid, pid uuid.UUID) (bool, error) {
+					return false, fmt.Errorf("db error")
+				}
+			},
+			wantStatus: http.StatusInternalServerError,
+			wantErr:    "RP-500",
+		},
+		{
+			name:   "delete error",
+			pollID: pollID.String(),
+			mockSetup: func(repo *mockPollRepo) {
+				repo.ownsPollFunc = func(ctx context.Context, uid, pid uuid.UUID) (bool, error) {
+					return true, nil
+				}
+				repo.deleteWithOptionsFunc = func(ctx context.Context, pid uuid.UUID) error {
+					return fmt.Errorf("db error")
+				}
+			},
+			wantStatus: http.StatusInternalServerError,
+			wantErr:    "RP-500",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := &mockPollRepo{}
+			tt.mockSetup(repo)
+			handler := NewPollHandler(repo, &mockOptionRepo{})
+
+			req := setupPollRequest(http.MethodDelete, "/api/polls/"+tt.pollID, nil, userID)
+			req = mux.SetURLVars(req, map[string]string{"id": tt.pollID})
+			rec := httptest.NewRecorder()
+
+			handler.DeletePoll(rec, req)
+
+			if rec.Code != tt.wantStatus {
+				t.Errorf("status = %d, want %d", rec.Code, tt.wantStatus)
+			}
+		})
+	}
+}
+
 func TestGetPollReport(t *testing.T) {
 	userID := uuid.New()
 	pollID := uuid.New()
