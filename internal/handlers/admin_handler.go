@@ -46,7 +46,12 @@ func (h *AdminHandler) OnboardUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	helpers.SendSuccessResponse(w, "User onboarded successfully", user)
-	return
+	resp := models.OnboardUserResponseDto{
+		ID:        user.ID,
+		ApiKey:    user.ApiKey,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+	}
 
+	helpers.SendCreatedResponse(w, "User onboarded successfully", resp)
 }

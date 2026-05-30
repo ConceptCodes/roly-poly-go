@@ -1,5 +1,7 @@
 package models
 
+import "github.com/google/uuid"
+
 type HealthCheckResponseDto struct {
 	Status  bool   `json:"status"`
 	Service string `json:"service"`
@@ -8,6 +10,13 @@ type HealthCheckResponseDto struct {
 type OnboardUserRequestDto struct {
 	FirstName string `json:"first_name" validate:"required,alpha,min=2,max=100,noSQLKeywords"`
 	LastName  string `json:"last_name" validate:"required,alpha,min=2,max=100,noSQLKeywords"`
+}
+
+type OnboardUserResponseDto struct {
+	ID        uuid.UUID `json:"id"`
+	ApiKey    uuid.UUID `json:"api_key"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
 }
 
 type CreatePollRequestDto struct {

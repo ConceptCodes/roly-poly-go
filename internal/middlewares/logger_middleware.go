@@ -23,6 +23,11 @@ func (rw *responseWriter) Write(b []byte) (int, error) {
 	return rw.ResponseWriter.Write(b)
 }
 
+func (lrw *responseWriter) WriteHeader(code int) {
+	lrw.statusCode = code
+	lrw.ResponseWriter.WriteHeader(code)
+}
+
 func RequestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -40,6 +45,7 @@ func RequestLogger(next http.Handler) http.Handler {
 		})
 
 		rw := &responseWriter{ResponseWriter: w, body: &bytes.Buffer{}}
+		next.ServeHTTP(rw, r)
 
 		log.
 			Info().
@@ -50,13 +56,5 @@ func RequestLogger(next http.Handler) http.Handler {
 			Int("status_code", rw.statusCode).
 			Str("remote_addr", r.RemoteAddr).
 			Msgf("%s request", r.Method)
-
-		next.ServeHTTP(w, r)
-
 	})
-}
-
-func (lrw *responseWriter) WriteHeader(code int) {
-	lrw.statusCode = code
-	lrw.ResponseWriter.WriteHeader(code)
 }

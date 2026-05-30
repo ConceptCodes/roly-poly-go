@@ -51,6 +51,7 @@ func Run() {
 	router.Use(middlewares.ContentTypeJSON)
 	router.Use(middlewares.NewAuthMiddleware(db))
 	router.Use(middlewares.RequestLogger)
+	router.NotFoundHandler = http.HandlerFunc(middlewares.NotFound)
 
 	router.HandleFunc(constants.HealthCheckEndpoint, healthHandler.ServiceAliveHandler).Methods("GET")
 	router.HandleFunc(constants.ReadinessEndpoint, healthHandler.ServiceReadyHandler).Methods("GET")

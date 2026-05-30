@@ -46,6 +46,11 @@ func NewAuthMiddleware(db *gorm.DB) func(http.Handler) http.Handler {
 				return
 			}
 
+			if !user.Enabled {
+				helpers.SendErrorResponse(w, "User account is disabled", constants.Forbidden, nil)
+				return
+			}
+
 			r = helpers.SetApiKey(r, apiKey)
 			r = helpers.SetUserId(r, user.ID)
 

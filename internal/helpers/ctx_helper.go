@@ -23,7 +23,11 @@ func SetRequestId(r *http.Request, requestID string) *http.Request {
 }
 
 func GetRequestId(r *http.Request) string {
-	return r.Context().Value(RequestIDKey).(string)
+	requestId := r.Context().Value(RequestIDKey)
+	if requestId == nil {
+		return ""
+	}
+	return requestId.(string)
 }
 
 func SetApiKey(r *http.Request, apiKey string) *http.Request {

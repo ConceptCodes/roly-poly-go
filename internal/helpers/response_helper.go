@@ -9,6 +9,16 @@ import (
 	"roly-poly/pkg/logger"
 )
 
+func SendCreatedResponse(w http.ResponseWriter, message string, data interface{}) {
+	response := models.Response{
+		Message: message,
+		Data:    data,
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
+}
+
 func SendSuccessResponse(w http.ResponseWriter, message string, data interface{}) {
 	response := models.Response{
 		Message: message,
