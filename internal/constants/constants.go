@@ -7,6 +7,7 @@ const (
 	Unauthorized        = "RP-401"
 	Forbidden           = "RP-403"
 	InternalServerError = "RP-500"
+	TooManyRequests     = "RP-429"
 
 	// Endpoints
 	ApiPrefix           = "/api"

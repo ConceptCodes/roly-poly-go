@@ -17,7 +17,9 @@ import (
 	"roly-poly/internal/middlewares"
 	repository "roly-poly/internal/repositories"
 	"roly-poly/pkg/logger"
+	"roly-poly/pkg/ratelimit"
 	"roly-poly/pkg/storage/postgres"
+	redis2 "roly-poly/pkg/storage/redis"
 )
 
 func Run() {
@@ -38,8 +40,15 @@ func Run() {
 	pollHandler := handlers.NewPollHandler(pollRepo, optionRepo)
 	voteHandler := handlers.NewVoteHandler(pollRepo)
 
+	redisClient, err := redis2.New(context.Background())
+	if err != nil {
+		log.Warn().Err(err).Msg("Redis not available, rate limiting disabled")
+	}
+
 	router := mux.NewRouter()
 
+	router.Use(middlewares.Recovery)
+	router.Use(middlewares.BodyLimit(middlewares.MaxBodyBytes))
 	router.Use(middlewares.TraceRequest)
 	router.Use(middlewares.ContentTypeJSON)
 	router.Use(middlewares.NewAuthMiddleware(db))
@@ -49,7 +58,15 @@ func Run() {
 	router.HandleFunc(constants.HealthCheckEndpoint, healthHandler.ServiceAliveHandler).Methods("GET")
 	router.HandleFunc(constants.ReadinessEndpoint, healthHandler.ServiceReadyHandler).Methods("GET")
 
-	router.HandleFunc(constants.OnboardUserEndpoint, adminHandler.OnboardUser).Methods("POST")
+	if redisClient != nil {
+		limiter := ratelimit.New(redisClient, 10, 60*time.Second,
+			ratelimit.WithKeyFunc(func(ip string) string { return fmt.Sprintf("ratelimit:onboard:%s", ip) }),
+		)
+		onboardHandler := middlewares.NewRateLimitMiddleware(limiter)(http.HandlerFunc(adminHandler.OnboardUser))
+		router.HandleFunc(constants.OnboardUserEndpoint, onboardHandler.ServeHTTP).Methods("POST")
+	} else {
+		router.HandleFunc(constants.OnboardUserEndpoint, adminHandler.OnboardUser).Methods("POST")
+	}
 
 	router.HandleFunc(constants.CreatePollEndpoint, pollHandler.CreatePoll).Methods("POST")
 	router.HandleFunc(constants.ClosePollEndpoint, pollHandler.ClosePoll).Methods("PATCH")

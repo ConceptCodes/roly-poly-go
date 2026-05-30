@@ -53,6 +53,8 @@ func SendErrorResponse(w http.ResponseWriter, message string, errorCode string, 
 		w.WriteHeader(http.StatusForbidden)
 	case constants.BadRequest:
 		w.WriteHeader(http.StatusBadRequest)
+	case constants.TooManyRequests:
+		w.WriteHeader(http.StatusTooManyRequests)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}
