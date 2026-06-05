@@ -41,3 +41,21 @@ func TestTraceRequest_WithoutHeader(t *testing.T) {
 		t.Error("response header x-trace-id is empty, expected a UUID")
 	}
 }
+
+func TestTraceRequest_RejectsMalformedHeader(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set(constants.TraceIdHeader, "../../../etc/passwd\ninjected")
+	rec := httptest.NewRecorder()
+
+	TraceRequest(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestId := helpers.GetRequestId(r)
+		if requestId == "../../../etc/passwd\ninjected" {
+			t.Error("malformed trace ID was accepted, expected a generated UUID")
+		}
+	})).ServeHTTP(rec, req)
+
+	responseId := rec.Header().Get(constants.TraceIdHeader)
+	if responseId == "../../../etc/passwd\ninjected" {
+		t.Error("malformed trace ID was echoed back, expected a generated UUID")
+	}
+}
