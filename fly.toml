@@ -1,0 +1,30 @@
+app = "roly-poly"
+primary_region = "iad"
+
+[build]
+  dockerfile = "infra/Dockerfile"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    method = "GET"
+    path = "/api/health/alive"
+
+[env]
+  ENV = "prod"
+
+[release_command]
+  process = "migrate"
+  command = "/migrate -dir /migrations postgres \"$DATABASE_URL\" up"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
