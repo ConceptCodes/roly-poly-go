@@ -257,3 +257,16 @@ just swag             # Regenerate OpenAPI docs
 just dc-up            # docker compose -f infra/docker-compose.yml up -d
 just migrate-up       # run goose migrations
 ```
+
+## Deployment
+
+The project is configured for deployment on [Railway](https://railway.app).
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new)
+
+1. Click the button above or create a new project on Railway from your GitHub repo.
+2. Add a **PostgreSQL** plugin — Railway will inject a `DATABASE_URL` env var.
+3. Add a **Redis** plugin — Railway will inject a `REDISHOST`, `REDISPORT`, etc. Set `REDIS_HOST`, `REDIS_PORT` in the environment accordingly.
+4. Set `ENV=prod` and any other [configuration](#configuration) overrides in the Railway dashboard.
+5. In the Railway dashboard, add a **Pre-deploy Command**: `/migrate -dir /migrations postgres "$DATABASE_URL" up`
+6. Railway will build the `infra/Dockerfile` and deploy with automatic health checks against `/api/health/alive`.
