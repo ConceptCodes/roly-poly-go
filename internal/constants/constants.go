@@ -43,6 +43,8 @@ const (
 	ApiKeyCtxKey        = "api_key"
 	UserIdCtxKey        = "user_id"
 
+	MetricsEndpoint = ApiPrefix + "/metrics"
+
 	// Errors
 	HealthCheckError = "Error while performing healthcheck for service: %s"
 )
