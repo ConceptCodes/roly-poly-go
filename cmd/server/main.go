@@ -105,6 +105,10 @@ func Run() {
 		log.Error().Err(err).Msg("Server forced to shutdown")
 	}
 
+	if redisClient != nil {
+		redisClient.Close()
+	}
+
 	postgres.Close(db)
 	log.Info().Msg("Server exited")
 }
