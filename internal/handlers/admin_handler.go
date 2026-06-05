@@ -23,10 +23,12 @@ func NewAdminHandler(userRepo repository.UserRepository) *AdminHandler {
 func (h *AdminHandler) OnboardUser(w http.ResponseWriter, r *http.Request) {
 	var data models.OnboardUserRequestDto
 
-	err := json.NewDecoder(r.Body).Decode(&data)
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	err := decoder.Decode(&data)
 
 	if err != nil {
-		helpers.SendErrorResponse(w, err.Error(), constants.BadRequest, err)
+		helpers.SendErrorResponse(w, "Invalid request body", constants.BadRequest, err)
 		return
 	}
 

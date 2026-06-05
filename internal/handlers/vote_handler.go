@@ -31,8 +31,10 @@ func (h *VoteHandler) CastVote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var data models.CastVoteRequestDto
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		helpers.SendErrorResponse(w, err.Error(), constants.BadRequest, err)
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&data); err != nil {
+		helpers.SendErrorResponse(w, "Invalid request body", constants.BadRequest, err)
 		return
 	}
 

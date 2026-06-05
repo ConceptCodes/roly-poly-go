@@ -27,10 +27,12 @@ func NewPollHandler(pollRepo repository.PollRepository, optionRepo repository.Op
 func (h *PollHandler) CreatePoll(w http.ResponseWriter, r *http.Request) {
 	var data models.CreatePollRequestDto
 
-	err := json.NewDecoder(r.Body).Decode(&data)
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	err := decoder.Decode(&data)
 
 	if err != nil {
-		helpers.SendErrorResponse(w, err.Error(), constants.BadRequest, err)
+		helpers.SendErrorResponse(w, "Invalid request body", constants.BadRequest, err)
 		return
 	}
 
@@ -117,10 +119,12 @@ func (h *PollHandler) ClosePoll(w http.ResponseWriter, r *http.Request) {
 func (h *PollHandler) UpdatePoll(w http.ResponseWriter, r *http.Request) {
 	var data models.PollRequestDto
 
-	err := json.NewDecoder(r.Body).Decode(&data)
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	err := decoder.Decode(&data)
 
 	if err != nil {
-		helpers.SendErrorResponse(w, err.Error(), constants.BadRequest, err)
+		helpers.SendErrorResponse(w, "Invalid request body", constants.BadRequest, err)
 		return
 	}
 
