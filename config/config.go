@@ -22,6 +22,8 @@ type Config struct {
 	RedisPort int    `env:"REDIS_PORT" envDefault:"6379"`
 	RedisPass string `env:"REDIS_PASS" envDefault:""`
 
+	CorsAllowedOrigins string `env:"CORS_ALLOWED_ORIGINS" envDefault:"*"`
+
 	Env string `env:"ENV" envDefault:"development"`
 }
 
