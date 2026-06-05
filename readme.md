@@ -25,16 +25,18 @@ PostgreSQL with the `gen_random_uuid()` function available.
 
 The app loads configuration from `.env` and environment variables.
 
-```env
-PORT=8080
-HTTP_TIMEOUT=15
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=postgres
-DB_PASS=postgres
-DB_NAME=roly_poly
-ENV=development
-```
+See [`.env.example`](.env.example) for all available configuration. Key variables:
+
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `8080` | HTTP listen port |
+| `HTTP_READ_TIMEOUT` | `15` | Read timeout (seconds) |
+| `HTTP_WRITE_TIMEOUT` | `30` | Write timeout (seconds) |
+| `HTTP_SHUTDOWN_TIMEOUT` | `10` | Graceful shutdown timeout (seconds) |
+| `ENV` | `development` | `development` or `prod` |
+| `DB_SSL_MODE` | `require` | PostgreSQL SSL mode |
+| `CORS_ALLOWED_ORIGINS` | `*` | Comma-separated list of allowed origins |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | — | OpenTelemetry OTLP HTTP endpoint (empty = disabled) |
 
 ## Installation
 
@@ -102,6 +104,8 @@ curl --location 'http://localhost:8080/api/onboard' \
 | --- | --- | --- | --- |
 | GET | `/api/health/alive` | No | Liveness check |
 | GET | `/api/health/status` | No | Readiness check |
+| GET | `/api/docs` | No | Swagger UI |
+| GET | `/api/metrics` | No | Prometheus metrics |
 | POST | `/api/onboard` | No | Create a user and API key |
 | POST | `/api/polls` | Yes | Create a poll with options |
 | GET | `/api/polls` | Yes | List polls owned by the authenticated user |
@@ -243,11 +247,13 @@ Known error codes:
 ## Development
 
 ```sh
-just build   # go build
-just run     # go run ./main.go
-just test    # go test -race -count=1 ./...
-just lint    # golangci-lint run
-just vet     # go vet ./...
-just dc-up   # docker compose -f infra/docker-compose.yml up -d
-just migrate-up  # run goose migrations
+just build            # go build -o bin/server ./main.go
+just run              # go run ./main.go
+just test             # go test -race -count=1 ./...
+just test-integration # go test -tags=integration -race -count=1 ./internal/repositories/
+just lint             # golangci-lint run
+just vet              # go vet ./...
+just swag             # Regenerate OpenAPI docs
+just dc-up            # docker compose -f infra/docker-compose.yml up -d
+just migrate-up       # run goose migrations
 ```
