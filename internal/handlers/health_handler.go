@@ -4,15 +4,18 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
 	"roly-poly/internal/helpers"
 	"roly-poly/internal/models"
 	"roly-poly/pkg/storage/postgres"
+	redis2 "roly-poly/pkg/storage/redis"
 )
 
 type HealthHandler struct {
-	db *gorm.DB
+	db          *gorm.DB
+	redisClient *redis.Client
 }
 
 type Service struct {
@@ -20,8 +23,8 @@ type Service struct {
 	Fn   func() bool
 }
 
-func NewHealthHandler(db *gorm.DB) *HealthHandler {
-	return &HealthHandler{db: db}
+func NewHealthHandler(db *gorm.DB, redisClient *redis.Client) *HealthHandler {
+	return &HealthHandler{db: db, redisClient: redisClient}
 }
 
 // ServiceAliveHandler godoc
@@ -49,6 +52,13 @@ func (h *HealthHandler) ServiceReadyHandler(w http.ResponseWriter, r *http.Reque
 
 	services := []Service{
 		{Name: "Postgres", Fn: func() bool { return postgres.HealthCheck(h.db) }},
+	}
+
+	if h.redisClient != nil {
+		services = append(services, Service{
+			Name: "Redis",
+			Fn:   func() bool { return redis2.HealthCheck(r.Context(), h.redisClient) },
+		})
 	}
 
 	var wg sync.WaitGroup

@@ -17,7 +17,7 @@ func TestServiceAliveHandler(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/health/alive", nil)
 	rec := httptest.NewRecorder()
 
-	handler := NewHealthHandler(nil)
+	handler := NewHealthHandler(nil, nil)
 	handler.ServiceAliveHandler(rec, req)
 
 	if rec.Code != http.StatusOK {
@@ -72,7 +72,7 @@ func TestServiceReadyHandler(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/health/status", nil)
 	rec := httptest.NewRecorder()
 
-	handler := NewHealthHandler(gormDB)
+	handler := NewHealthHandler(gormDB, nil)
 	handler.ServiceReadyHandler(rec, req)
 
 	if rec.Code != http.StatusOK {
