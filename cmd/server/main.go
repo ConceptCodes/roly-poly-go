@@ -20,10 +20,16 @@ import (
 	"roly-poly/pkg/ratelimit"
 	"roly-poly/pkg/storage/postgres"
 	redis2 "roly-poly/pkg/storage/redis"
+	"roly-poly/pkg/tracer"
 )
 
 func Run() {
 	log := logger.New()
+
+	tp, err := tracer.InitTracerProvider(context.Background())
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to initialize tracer provider, tracing disabled")
+	}
 
 	db, err := postgres.New()
 
@@ -52,12 +58,15 @@ func Run() {
 	router.Use(middlewares.BodyLimit(middlewares.MaxBodyBytes))
 	router.Use(middlewares.TraceRequest)
 	router.Use(middlewares.ContentTypeJSON)
+	router.Use(middlewares.Tracing(config.AppConfig.OtelServiceName))
+	router.Use(middlewares.Metrics)
 	router.Use(middlewares.NewAuthMiddleware(userRepo))
 	router.Use(middlewares.RequestLogger)
 	router.NotFoundHandler = http.HandlerFunc(middlewares.NotFound)
 
 	router.HandleFunc(constants.HealthCheckEndpoint, healthHandler.ServiceAliveHandler).Methods("GET")
 	router.HandleFunc(constants.ReadinessEndpoint, healthHandler.ServiceReadyHandler).Methods("GET")
+	router.Handle(constants.MetricsEndpoint, middlewares.MetricsHandler()).Methods("GET")
 
 	if redisClient != nil {
 		onboardLimiter := middlewares.NewRateLimitMiddleware(
@@ -123,6 +132,10 @@ func Run() {
 
 	if redisClient != nil {
 		redisClient.Close()
+	}
+
+	if tp != nil {
+		_ = tp.Shutdown(context.Background())
 	}
 
 	postgres.Close(db)

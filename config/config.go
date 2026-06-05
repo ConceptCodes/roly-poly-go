@@ -24,6 +24,9 @@ type Config struct {
 
 	CorsAllowedOrigins string `env:"CORS_ALLOWED_ORIGINS" envDefault:"*"`
 
+	OtelEndpoint   string `env:"OTEL_EXPORTER_OTLP_ENDPOINT" envDefault:""`
+	OtelServiceName string `env:"OTEL_SERVICE_NAME" envDefault:"roly-poly"`
+
 	Env string `env:"ENV" envDefault:"development"`
 }
 
