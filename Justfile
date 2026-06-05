@@ -25,6 +25,9 @@ vet:
 lint:
     golangci-lint run
 
+swag:
+    swag init --parseDependency --parseInternal -o ./docs
+
 migrate-up:
     goose -dir infra/migrations postgres "{{dsn}}" up
 

@@ -20,6 +20,17 @@ func NewAdminHandler(userRepo repository.UserRepository) *AdminHandler {
 	}
 }
 
+// OnboardUser godoc
+// @Summary      Create a user and API key
+// @Description  Creates a new user and returns an API key for authenticating subsequent requests.
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      models.OnboardUserRequestDto  true  "User details"
+// @Success      201     {object}  models.Response  "User onboarded successfully"
+// @Failure      400     {object}  models.Response  "Invalid request body"
+// @Failure      500     {object}  models.Response  "Error while creating user"
+// @Router       /onboard [post]
 func (h *AdminHandler) OnboardUser(w http.ResponseWriter, r *http.Request) {
 	var data models.OnboardUserRequestDto
 

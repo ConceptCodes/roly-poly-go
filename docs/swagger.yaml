@@ -1,0 +1,428 @@
+definitions:
+  models.CastVoteRequestDto:
+    properties:
+      option_ids:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - option_ids
+    type: object
+  models.CreatePollRequestDto:
+    properties:
+      description:
+        example: Where should we eat?
+        maxLength: 100
+        type: string
+      options:
+        example:
+        - '["Tacos"'
+        - '"Pizza"'
+        - '"Salad"]'
+        items:
+          type: string
+        type: array
+      public:
+        example: true
+        type: boolean
+      title:
+        example: Lunch
+        maxLength: 100
+        minLength: 2
+        type: string
+    required:
+    - options
+    - title
+    type: object
+  models.OnboardUserRequestDto:
+    properties:
+      first_name:
+        example: Ada
+        maxLength: 100
+        minLength: 2
+        type: string
+      last_name:
+        example: Lovelace
+        maxLength: 100
+        minLength: 2
+        type: string
+    required:
+    - first_name
+    - last_name
+    type: object
+  models.OptionSummaryDto:
+    properties:
+      label:
+        example: Tacos
+        type: string
+      option_id:
+        type: string
+      percentage:
+        example: 66.67
+        type: number
+      votes:
+        example: 42
+        type: integer
+    type: object
+  models.PollReportDto:
+    properties:
+      options:
+        items:
+          $ref: '#/definitions/models.OptionSummaryDto'
+        type: array
+      poll_id:
+        type: string
+      title:
+        example: Lunch
+        type: string
+      total_votes:
+        example: 100
+        type: integer
+    type: object
+  models.PollRequestDto:
+    properties:
+      description:
+        example: Where should we eat today?
+        maxLength: 100
+        type: string
+      public:
+        example: true
+        type: boolean
+      title:
+        example: Team Lunch
+        maxLength: 100
+        minLength: 2
+        type: string
+    required:
+    - title
+    type: object
+  models.Response:
+    properties:
+      data: {}
+      error_code:
+        type: string
+      message:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/health/alive:
+    get:
+      consumes:
+      - application/json
+      description: Returns 200 when the service is running. No dependencies checked.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service is alive
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Service liveness check
+      tags:
+      - Health
+  /api/health/ready:
+    get:
+      consumes:
+      - application/json
+      description: Returns 200 when Postgres (and Redis, if configured) are reachable.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service is ready
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Service readiness check
+      tags:
+      - Health
+  /onboard:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user and returns an API key for authenticating subsequent
+        requests.
+      parameters:
+      - description: User details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.OnboardUserRequestDto'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User onboarded successfully
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/models.Response'
+        "500":
+          description: Error while creating user
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Create a user and API key
+      tags:
+      - Auth
+  /polls:
+    get:
+      consumes:
+      - application/json
+      description: List polls owned by the authenticated user. Add ?public=true to
+        list all public polls.
+      parameters:
+      - description: Set to true to list public polls
+        in: query
+        name: public
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Polls fetched successfully
+          schema:
+            $ref: '#/definitions/models.Response'
+        "500":
+          description: Error while fetching polls
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: List polls
+      tags:
+      - Polls
+    post:
+      consumes:
+      - application/json
+      description: Create a new poll owned by the authenticated user with one or more
+        options.
+      parameters:
+      - description: Poll details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreatePollRequestDto'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Poll created successfully
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/models.Response'
+        "500":
+          description: Error while creating poll
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a poll with options
+      tags:
+      - Polls
+  /polls/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a poll, its options, and all associated votes. Only the
+        owner can delete.
+      parameters:
+      - description: Poll ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Poll deleted successfully
+          schema:
+            $ref: '#/definitions/models.Response'
+        "403":
+          description: User does not own the poll
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: Poll not found
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a poll
+      tags:
+      - Polls
+    get:
+      consumes:
+      - application/json
+      description: Fetch a poll by ID. The authenticated user can see their own polls
+        and public polls.
+      parameters:
+      - description: Poll ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Poll fetched successfully
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: Poll not found
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Get a single poll
+      tags:
+      - Polls
+    patch:
+      consumes:
+      - application/json
+      description: Update the title and/or description of a poll owned by the authenticated
+        user.
+      parameters:
+      - description: Poll ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Poll updates
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.PollRequestDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Poll updated successfully
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/models.Response'
+        "403":
+          description: User does not own the poll
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a poll
+      tags:
+      - Polls
+  /polls/{id}/close:
+    patch:
+      consumes:
+      - application/json
+      description: Close a poll owned by the authenticated user. Once closed, no more
+        votes are accepted.
+      parameters:
+      - description: Poll ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Poll closed successfully
+          schema:
+            $ref: '#/definitions/models.Response'
+        "403":
+          description: User does not own the poll
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: Poll not found
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Close a poll
+      tags:
+      - Polls
+  /polls/{id}/report:
+    get:
+      consumes:
+      - application/json
+      description: Get vote totals and percentages for each option in a poll.
+      parameters:
+      - description: Poll ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Poll report fetched successfully
+          schema:
+            $ref: '#/definitions/models.PollReportDto'
+        "404":
+          description: Poll not found
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Get poll report
+      tags:
+      - Polls
+  /polls/{id}/vote:
+    post:
+      consumes:
+      - application/json
+      description: Vote for one or more options on a poll. Single-option polls reject
+        multiple option IDs.
+      parameters:
+      - description: Poll ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Vote details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CastVoteRequestDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Vote cast successfully
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: Invalid request body or vote not allowed
+          schema:
+            $ref: '#/definitions/models.Response'
+        "403":
+          description: Poll is closed
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: Poll not found
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: Cast a vote
+      tags:
+      - Votes
+swagger: "2.0"

@@ -22,6 +22,20 @@ func NewVoteHandler(pollRepo repository.PollRepository) *VoteHandler {
 	return &VoteHandler{pollRepo: pollRepo}
 }
 
+// CastVote godoc
+// @Summary      Cast a vote
+// @Description  Vote for one or more options on a poll. Single-option polls reject multiple option IDs.
+// @Tags         Votes
+// @Accept       json
+// @Produce      json
+// @Security     ApiKeyAuth
+// @Param        id       path    string                    true  "Poll ID"
+// @Param        request  body    models.CastVoteRequestDto  true  "Vote details"
+// @Success      200     {object}  models.Response  "Vote cast successfully"
+// @Failure      400     {object}  models.Response  "Invalid request body or vote not allowed"
+// @Failure      403     {object}  models.Response  "Poll is closed"
+// @Failure      404     {object}  models.Response  "Poll not found"
+// @Router       /polls/{id}/vote [post]
 func (h *VoteHandler) CastVote(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	pollID, err := uuid.Parse(vars["id"])

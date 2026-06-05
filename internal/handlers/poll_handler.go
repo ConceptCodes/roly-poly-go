@@ -24,6 +24,18 @@ func NewPollHandler(pollRepo repository.PollRepository, optionRepo repository.Op
 	return &PollHandler{pollRepo: pollRepo, optionRepo: optionRepo}
 }
 
+// CreatePoll godoc
+// @Summary      Create a poll with options
+// @Description  Create a new poll owned by the authenticated user with one or more options.
+// @Tags         Polls
+// @Accept       json
+// @Produce      json
+// @Security     ApiKeyAuth
+// @Param        request  body      models.CreatePollRequestDto  true  "Poll details"
+// @Success      201     {object}  models.Response  "Poll created successfully"
+// @Failure      400     {object}  models.Response  "Invalid request body"
+// @Failure      500     {object}  models.Response  "Error while creating poll"
+// @Router       /polls [post]
 func (h *PollHandler) CreatePoll(w http.ResponseWriter, r *http.Request) {
 	var data models.CreatePollRequestDto
 
@@ -66,6 +78,17 @@ func (h *PollHandler) CreatePoll(w http.ResponseWriter, r *http.Request) {
 	helpers.SendCreatedResponse(w, "Poll created successfully", poll)
 }
 
+// GetPolls godoc
+// @Summary      List polls
+// @Description  List polls owned by the authenticated user. Add ?public=true to list all public polls.
+// @Tags         Polls
+// @Accept       json
+// @Produce      json
+// @Security     ApiKeyAuth
+// @Param        public  query     bool  false  "Set to true to list public polls"
+// @Success      200    {object}  models.Response  "Polls fetched successfully"
+// @Failure      500    {object}  models.Response  "Error while fetching polls"
+// @Router       /polls [get]
 func (h *PollHandler) GetPolls(w http.ResponseWriter, r *http.Request) {
 	publicOnly := r.URL.Query().Get("public") == "true"
 
@@ -81,6 +104,18 @@ func (h *PollHandler) GetPolls(w http.ResponseWriter, r *http.Request) {
 	helpers.SendSuccessResponse(w, "Polls fetched successfully", polls)
 }
 
+// ClosePoll godoc
+// @Summary      Close a poll
+// @Description  Close a poll owned by the authenticated user. Once closed, no more votes are accepted.
+// @Tags         Polls
+// @Accept       json
+// @Produce      json
+// @Security     ApiKeyAuth
+// @Param        id    path      string  true  "Poll ID"
+// @Success      200  {object}  models.Response  "Poll closed successfully"
+// @Failure      403  {object}  models.Response  "User does not own the poll"
+// @Failure      404  {object}  models.Response  "Poll not found"
+// @Router       /polls/{id}/close [patch]
 func (h *PollHandler) ClosePoll(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := uuid.Parse(vars["id"])
@@ -116,6 +151,19 @@ func (h *PollHandler) ClosePoll(w http.ResponseWriter, r *http.Request) {
 	helpers.SendSuccessResponse(w, "Poll closed successfully", nil)
 }
 
+// UpdatePoll godoc
+// @Summary      Update a poll
+// @Description  Update the title and/or description of a poll owned by the authenticated user.
+// @Tags         Polls
+// @Accept       json
+// @Produce      json
+// @Security     ApiKeyAuth
+// @Param        id       path    string                    true  "Poll ID"
+// @Param        request  body    models.PollRequestDto      true  "Poll updates"
+// @Success      200     {object}  models.Response  "Poll updated successfully"
+// @Failure      400     {object}  models.Response  "Invalid request body"
+// @Failure      403     {object}  models.Response  "User does not own the poll"
+// @Router       /polls/{id} [patch]
 func (h *PollHandler) UpdatePoll(w http.ResponseWriter, r *http.Request) {
 	var data models.PollRequestDto
 
@@ -166,6 +214,18 @@ func (h *PollHandler) UpdatePoll(w http.ResponseWriter, r *http.Request) {
 	helpers.SendSuccessResponse(w, "Poll updated successfully", poll)
 }
 
+// DeletePoll godoc
+// @Summary      Delete a poll
+// @Description  Delete a poll, its options, and all associated votes. Only the owner can delete.
+// @Tags         Polls
+// @Accept       json
+// @Produce      json
+// @Security     ApiKeyAuth
+// @Param        id   path      string  true  "Poll ID"
+// @Success      200  {object}  models.Response  "Poll deleted successfully"
+// @Failure      403  {object}  models.Response  "User does not own the poll"
+// @Failure      404  {object}  models.Response  "Poll not found"
+// @Router       /polls/{id} [delete]
 func (h *PollHandler) DeletePoll(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := uuid.Parse(vars["id"])
@@ -195,6 +255,17 @@ func (h *PollHandler) DeletePoll(w http.ResponseWriter, r *http.Request) {
 	helpers.SendSuccessResponse(w, "Poll deleted successfully", nil)
 }
 
+// GetPollReport godoc
+// @Summary      Get poll report
+// @Description  Get vote totals and percentages for each option in a poll.
+// @Tags         Polls
+// @Accept       json
+// @Produce      json
+// @Security     ApiKeyAuth
+// @Param        id   path      string  true  "Poll ID"
+// @Success      200  {object}  models.PollReportDto  "Poll report fetched successfully"
+// @Failure      404  {object}  models.Response       "Poll not found"
+// @Router       /polls/{id}/report [get]
 func (h *PollHandler) GetPollReport(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := uuid.Parse(vars["id"])
@@ -241,6 +312,17 @@ func (h *PollHandler) GetPollReport(w http.ResponseWriter, r *http.Request) {
 	helpers.SendSuccessResponse(w, "Poll report fetched successfully", report)
 }
 
+// GetPollById godoc
+// @Summary      Get a single poll
+// @Description  Fetch a poll by ID. The authenticated user can see their own polls and public polls.
+// @Tags         Polls
+// @Accept       json
+// @Produce      json
+// @Security     ApiKeyAuth
+// @Param        id   path      string  true  "Poll ID"
+// @Success      200  {object}  models.Response  "Poll fetched successfully"
+// @Failure      404  {object}  models.Response  "Poll not found"
+// @Router       /polls/{id} [get]
 func (h *PollHandler) GetPollById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := uuid.Parse(vars["id"])

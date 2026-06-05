@@ -28,26 +28,26 @@ func NewHealthHandler(db *gorm.DB, redisClient *redis.Client) *HealthHandler {
 }
 
 // ServiceAliveHandler godoc
-// @Summary Check if service is alive
-// @Description Check if service is alive
-// @Tags Health
-// @Accept json
-// @Produce json
-// @Success 200 {object} string
-// @Router /api/health/alive [get]
+// @Summary      Service liveness check
+// @Description  Returns 200 when the service is running. No dependencies checked.
+// @Tags         Health
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  models.Response  "Service is alive"
+// @Router       /api/health/alive [get]
 func (h *HealthHandler) ServiceAliveHandler(w http.ResponseWriter, r *http.Request) {
 	helpers.SendSuccessResponse(w, "Service is alive", nil)
 	return
 }
 
 // ServiceReadyHandler godoc
-// @Summary Check if our services are ready
-// @Description Check if service is ready
-// @Tags Health
-// @Accept json
-// @Produce json
-// @Success 200 {object} string
-// @Router /api/health/ready [get]
+// @Summary      Service readiness check
+// @Description  Returns 200 when Postgres (and Redis, if configured) are reachable.
+// @Tags         Health
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  models.Response  "Service is ready"
+// @Router       /api/health/ready [get]
 func (h *HealthHandler) ServiceReadyHandler(w http.ResponseWriter, r *http.Request) {
 
 	services := []Service{
