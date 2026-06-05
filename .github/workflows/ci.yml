@@ -34,3 +34,11 @@ jobs:
 
       - name: Build
         run: go build -o /dev/null ./...
+
+      - name: Deploy to Railway
+        if: github.ref == 'refs/heads/main'
+        uses: bervProject/railway-deploy@v0.1.2
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        with:
+          service: "roly-poly"
