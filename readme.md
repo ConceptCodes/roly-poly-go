@@ -17,7 +17,7 @@ Roly Poly is a Go REST API for creating polls, voting on poll options, and repor
 
 ## Prerequisites
 
-[![Go](https://img.shields.io/badge/go-%2300ADD8.svg?style=for-the-badge&logo=go&logoColor=white)](https://golang.org/doc/install) version 1.21 or higher
+[![Go](https://img.shields.io/badge/go-%2300ADD8.svg?style=for-the-badge&logo=go&logoColor=white)](https://golang.org/doc/install) version 1.25 or higher
 
 PostgreSQL with the `gen_random_uuid()` function available.
 
@@ -39,15 +39,15 @@ ENV=development
 ## Installation
 
 ```sh
-git clone https://github.com/conceptcodes/roly-poly-go.git
-cd roly-poly-go
+git clone <repository_url>
+cd roly-poly
 go mod download
 ```
 
 ## Running
 
 ```sh
-go run cmd/server/main.go
+go run ./main.go
 ```
 
 Verify that the service is running:
@@ -242,13 +242,12 @@ Known error codes:
 
 ## Development
 
-Run all packages:
-
 ```sh
-go test ./...
+just build   # go build
+just run     # go run ./main.go
+just test    # go test -race -count=1 ./...
+just lint    # golangci-lint run
+just vet     # go vet ./...
+just dc-up   # docker compose -f infra/docker-compose.yml up -d
+just migrate-up  # run goose migrations
 ```
-
-## Roadmap
-
-- [x] Add an endpoint to generate reports
-- [x] Add more tests
