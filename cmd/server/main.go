@@ -1,5 +1,24 @@
 package server
 
+// @title           Roly Poly API
+// @version         1.0.0
+// @description     REST API for creating polls, voting on options, and reporting results.
+// @termsOfService  https://github.com/conceptcodes/roly-poly-go
+
+// @contact.name   Roly Poly Support
+// @contact.email  support@rolypoly.dev
+
+// @license.name  MIT
+// @license.url   https://opensource.org/licenses/MIT
+
+// @host      localhost:8080
+// @BasePath  /api
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in                         header
+// @name                       x-api-key
+// @description                API key obtained from the /api/onboard endpoint.
+
 import (
 	"context"
 	"fmt"
@@ -10,6 +29,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	swagger "github.com/swaggo/http-swagger/v2"
+
+	_ "roly-poly/docs"
 
 	"roly-poly/config"
 	"roly-poly/internal/constants"
@@ -67,6 +89,7 @@ func Run() {
 	router.HandleFunc(constants.HealthCheckEndpoint, healthHandler.ServiceAliveHandler).Methods("GET")
 	router.HandleFunc(constants.ReadinessEndpoint, healthHandler.ServiceReadyHandler).Methods("GET")
 	router.Handle(constants.MetricsEndpoint, middlewares.MetricsHandler()).Methods("GET")
+	router.PathPrefix(constants.DocsEndpoint).Handler(swagger.WrapHandler).Methods("GET")
 
 	if redisClient != nil {
 		onboardLimiter := middlewares.NewRateLimitMiddleware(
