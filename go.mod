@@ -1,6 +1,6 @@
 module roly-poly
 
-go 1.25.0
+go 1.25.7
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
@@ -32,16 +32,18 @@ require (
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
-	github.com/jackc/pgx/v5 v5.4.3 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/pgx/v5 v5.9.2 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
+	github.com/klauspost/compress v1.18.5 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.66.1 // indirect
-	github.com/prometheus/procfs v0.16.1 // indirect
+	github.com/prometheus/procfs v0.20.1 // indirect
 	github.com/swaggo/files/v2 v2.0.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.44.0 // indirect
@@ -66,7 +68,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-isatty v0.0.21 // indirect
 	github.com/rs/zerolog v1.31.0
 	golang.org/x/crypto v0.52.0 // indirect
 	golang.org/x/sys v0.45.0 // indirect
