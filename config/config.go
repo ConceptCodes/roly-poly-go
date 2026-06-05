@@ -8,8 +8,10 @@ import (
 )
 
 type Config struct {
-	Port    int `env:"PORT" envDefault:"8080"`
-	Timeout int `env:"HTTP_TIMEOUT" envDefault:"15"`
+	Port           int `env:"PORT" envDefault:"8080"`
+	ReadTimeout    int `env:"HTTP_READ_TIMEOUT" envDefault:"15"`
+	WriteTimeout   int `env:"HTTP_WRITE_TIMEOUT" envDefault:"30"`
+	ShutdownTimeout int `env:"HTTP_SHUTDOWN_TIMEOUT" envDefault:"10"`
 
 	DbHost     string `env:"DB_HOST" envDefault:"localhost"`
 	DbPort     int    `env:"DB_PORT" envDefault:"5432"`

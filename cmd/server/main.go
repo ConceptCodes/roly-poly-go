@@ -129,8 +129,8 @@ func Run() {
 	srv := &http.Server{
 		Handler:      router,
 		Addr:         fmt.Sprintf(":%s", port),
-		WriteTimeout: time.Duration(config.AppConfig.Timeout) * time.Second,
-		ReadTimeout:  time.Duration(config.AppConfig.Timeout) * time.Second,
+		WriteTimeout: time.Duration(config.AppConfig.WriteTimeout) * time.Second,
+		ReadTimeout:  time.Duration(config.AppConfig.ReadTimeout) * time.Second,
 	}
 
 	go func() {
@@ -146,7 +146,7 @@ func Run() {
 
 	log.Info().Msg("Shutting down server...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(config.AppConfig.ShutdownTimeout)*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
